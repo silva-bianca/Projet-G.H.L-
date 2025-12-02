@@ -1,0 +1,39 @@
+-- 03_selects.sql
+
+-- 1) Painel de leitos por setor (ORDER BY)
+SELECT s.nome AS setor, l.id_leito, l.status_atual
+FROM leito l
+JOIN setor s ON s.id_setor = l.id_setor
+ORDER BY s.nome, l.id_leito;
+
+-- 2) Leitos ocupados com paciente (WHERE + JOIN)
+SELECT s.nome AS setor, l.id_leito, p.nome AS paciente, p.cpf
+FROM paciente p
+JOIN leito l ON l.id_leito = p.id_leito
+JOIN setor s ON s.id_setor = l.id_setor
+WHERE l.status_atual = 'Ocupado'
+ORDER BY s.nome, l.id_leito;
+
+-- 3) Média de TTV por setor (GROUP BY)
+SELECT s.nome AS setor, AVG(o.ttv_minutos) AS media_ttv_min
+FROM ocorrencia_ttv o
+JOIN leito l ON l.id_leito = o.id_leito
+JOIN setor s ON s.id_setor = l.id_setor
+WHERE o.ttv_minutos IS NOT NULL
+GROUP BY s.nome
+ORDER BY media_ttv_min DESC;
+
+-- 4) OS abertas/em andamento com responsáveis (JOIN + WHERE + ORDER BY + LIMIT)
+SELECT os.id_os, os.status, os.dt_abertura, u.nome AS responsavel, u.perfil
+FROM ordem_servico os
+JOIN usuario_os uos ON uos.id_os = os.id_os
+JOIN usuario u ON u.id_usuario = uos.id_usuario
+WHERE os.status IN ('Aberta', 'Em andamento')
+ORDER BY os.dt_abertura DESC
+LIMIT 10;
+
+-- 5) Ocorrências ainda não liberadas (WHERE)
+SELECT o.id_ocorrencia, o.id_leito, o.dt_alta, o.dt_inicio_limpeza, o.dt_fim_limpeza, o.dt_leito_liberado
+FROM ocorrencia_ttv o
+WHERE o.dt_leito_liberado IS NULL
+ORDER BY o.dt_alta DESC;
