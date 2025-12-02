@@ -1,0 +1,40 @@
+-- 04_updates_deletes.sql
+-- Dica: rode em uma transação enquanto testa.
+BEGIN;
+
+-- UPDATE 1) Leito 203 começou limpeza
+UPDATE leito
+SET status_atual = 'Em Limpeza'
+WHERE id_leito = 203 AND status_atual = 'Aguardando Limpeza';
+
+-- UPDATE 2) OS 9002 iniciou execução
+UPDATE ordem_servico
+SET status = 'Em andamento', dt_inicio = '2025-11-21 08:25:00'
+WHERE id_os = 9002 AND status = 'Aberta';
+
+-- UPDATE 3) Ocorrência 7002 registrou fim e liberação
+UPDATE ocorrencia_ttv
+SET dt_fim_limpeza = '2025-11-21 09:05:00',
+    dt_leito_liberado = '2025-11-21 09:10:00',
+    ttv_minutos = 70
+WHERE id_ocorrencia = 7002 AND dt_leito_liberado IS NULL;
+
+-- UPDATE 4) OS 9002 concluída
+UPDATE ordem_servico
+SET status = 'Concluída', dt_fim = '2025-11-21 09:05:00'
+WHERE id_os = 9002 AND status = 'Em andamento';
+
+-- DELETE 1) Remove atribuições (N:N) de uma OS específica (exemplo)
+DELETE FROM usuario_os
+WHERE id_os = 9001 AND id_usuario = 4;
+
+-- DELETE 2) Remove ocorrência “sem OS” (exemplo seguro: só apaga se não existir OS vinculada)
+DELETE FROM ocorrencia_ttv
+WHERE id_ocorrencia = 7002
+  AND NOT EXISTS (SELECT 1 FROM ordem_servico os WHERE os.id_ocorrencia = ocorrencia_ttv.id_ocorrencia);
+
+-- DELETE 3) Remove paciente por CPF (exemplo de limpeza de cadastro)
+DELETE FROM paciente
+WHERE cpf = '987.654.321-00' AND id_paciente = 2;
+
+COMMIT;
